@@ -5,6 +5,7 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::collections::HashMap;
 
+const CUTOFF: u32 = 200;
 const RIGHT: u16 = 8;
 const BOTTOM: u16 = 4;
 const LEFT: u16 = 2;
@@ -14,7 +15,7 @@ const STRAIGHT: u16 = 170;
 const BEND: u16 = 204;
 //const W: usize = 6;
 //const H: usize = 5;
-const BACKGROUNDS: [(Colour, u32); 2] = [(Blue, 12), (Yellow, 18)];
+const BACKGROUNDS: [(Colour, u32); 3] = [(Blue, 10), (Red, 10), (Black, 10)];
 lazy_static! {
     //TODO use hashmap of <Colour, u32> to look up max for each colour
     //static ref LAST: usize = W * H - 1;
@@ -26,7 +27,7 @@ lazy_static! {
 ///////////////////////////////////// enums
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum Colour {
-    Blue, //NB these first six have to be in the same order as the faces are defined in the blocks array at the start of main()
+    Blue, //NB these first six have to be in the same order as the faces are defined in the blocks array at the start of solve()
     Green,
     Yellow,
     Black,
@@ -106,7 +107,7 @@ impl Face {
     }
 }
 
-fn as_colour(v: usize) -> &'static str {
+fn as_colour(v: usize) -> &'static str { // readability
     match v {
         0 => "Blue",
         1 => "Green",
@@ -225,7 +226,7 @@ impl Puzzle {
     // recursively ///////////////////////
     fn make_chain(&mut self, posn: usize, new_start: bool) -> (bool, bool) { // first bool if successful, second if line completed
         // if doing n colours the last cube must give equal numbers of each
-        if self.bkg_count.iter().take(6).any(|v| v[1] > v[0]) || self.bkg_count[6][1] > 500 {
+        if self.bkg_count.iter().take(6).any(|v| v[1] > v[0]) || self.bkg_count[6][1] > CUTOFF {
             return (false, false);
         }
 
@@ -308,7 +309,7 @@ impl Puzzle {
                                 return (false, false);
                             }
                             for chain in &self.chains {
-                                print!(" <--> ");
+                                print!(" <--> "); // all on one line to save space for doing time trials
                                 for col in chain {
                                     print!("{:2}{:1}   ", self.blocks[col.block_index].name, as_colour(col.block_orientation));
                                 }
@@ -334,7 +335,6 @@ impl Puzzle {
 
 ///////////////////////////////////// main
 fn main() {
-    let mut rng = thread_rng();
     let mut puzzle = Puzzle::new();
     puzzle.solve();
 }
