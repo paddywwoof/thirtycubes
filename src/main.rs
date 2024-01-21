@@ -5,7 +5,7 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::collections::HashMap;
 
-const CUTOFF: u32 = 200;
+const CUTOFF: u32 = 150;
 const RIGHT: u16 = 8;
 const BOTTOM: u16 = 4;
 const LEFT: u16 = 2;
@@ -15,7 +15,8 @@ const STRAIGHT: u16 = 170;
 const BEND: u16 = 204;
 //const W: usize = 6;
 //const H: usize = 5;
-const BACKGROUNDS: [(Colour, u32); 3] = [(Blue, 10), (Red, 10), (Black, 10)];
+//const BACKGROUNDS: [(Colour, u32); 3] = [(Blue, 10), (Red, 10), (Black, 10)];
+const BACKGROUNDS: [(Colour, u32); 6] = [(Blue, 5), (Red, 5), (Black, 5), (Green, 5), (Yellow, 5), (Purple, 5)];
 lazy_static! {
     //TODO use hashmap of <Colour, u32> to look up max for each colour
     //static ref LAST: usize = W * H - 1;
@@ -182,7 +183,9 @@ impl Puzzle {
                 self.bkg_count[*colour as usize][0] = *max_num;
             }
             self.blocks.shuffle(&mut rng);
-            self.make_chain(0, true);
+            if self.make_chain(0, true).0 { // now returns a tuple
+                break;
+            }
         }
     
     }
@@ -237,6 +240,10 @@ impl Puzzle {
                     orientation = (orientation + 1) % 6;
                     //TODO make background colours usize for indexing into blocks NB this will just work with `for orientation in [Blue, Green, Yellow..].iter() {}
                     // then blocks[i].faces[orientation as usize].background
+                    // suduko only use ends!
+                    if self.blocks[i].faces[orientation].tp != END {
+                        continue;
+                    }
                     if BACKGROUNDS.iter().any(|v| self.blocks[i].faces[orientation].background == v.0) { // check background colours for first three puzzles here
                         // no need to check orientation for chain, just whether this line is started or not.
                         // if line is not started then the Face must be of tp == END, if line *is* started then any Face will do but another END will complete
@@ -250,10 +257,10 @@ impl Puzzle {
                                 let check_foreground = &self.blocks[self.chains[j][0].block_index].faces[self.chains[j][0].block_orientation].foreground;
                                 let this_background = &self.blocks[i].faces[orientation].background;
                                 // if puzzle type first 3 then background match all chain
-                                let check_background = &self.blocks[self.chains[j][0].block_index].faces[self.chains[j][0].block_orientation].background;
-                                if this_foreground == check_foreground && this_background == check_background {
+                                //let check_background = &self.blocks[self.chains[j][0].block_index].faces[self.chains[j][0].block_orientation].background;
+                                //if this_foreground == check_foreground && this_background == check_background {
                                 // if puzzle type 4 then backgrounds all different in chain
-                                //if this_foreground == check_foreground && !self.chains[j].iter().any(|v| {&self.blocks[v.block_index].faces[v.block_orientation].background == this_background}) {
+                                if this_foreground == check_foreground && !self.chains[j].iter().any(|v| {&self.blocks[v.block_index].faces[v.block_orientation].background == this_background}) {
                                     self.insert(posn, i, orientation, Some(j));
 
                                     let (add_ok, complete) = self.make_chain(posn + 1, true); // this will only be true if every recursive call after here was true
@@ -279,10 +286,10 @@ impl Puzzle {
                             }
                             let this_background = &self.blocks[i].faces[orientation].background;
                             // if puzzle type 1,2,3
-                            let check_background = &self.blocks[check_cell.block_index].faces[check_cell.block_orientation].background;
-                            if this_background != check_background {
+                            //let check_background = &self.blocks[check_cell.block_index].faces[check_cell.block_orientation].background;
+                            //if this_background != check_background {
                             // if puzzle type 4
-                            //if self.chains[last_ch].iter().any(|v| {&self.blocks[v.block_index].faces[v.block_orientation].background == this_background}) {
+                            if self.chains[last_ch].iter().any(|v| {&self.blocks[v.block_index].faces[v.block_orientation].background == this_background}) {
                                 continue;
                             }
                         }
