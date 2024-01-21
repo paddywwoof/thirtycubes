@@ -1,0 +1,1 @@
+solver for 30 cubes puzzle
